@@ -38,6 +38,11 @@
     "webpack-dev-server": "^5.2.0"
   },
   "dependencies": {
-    "bootstrap": "^5.3.3"
+    "bootstrap": "^5.3.3",
+    "i18next": "^24.2.3",
+    "lodash": "^4.17.21",
+    "on-change": "^5.0.1",
+    "valtio": "^2.1.4",
+    "yup": "^1.6.1"
   }
 }
