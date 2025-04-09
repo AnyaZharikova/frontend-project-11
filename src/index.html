@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RSS агрегатор</title>
+  </head>
+  <body class="d-flex min-vh-100">
+    <main class="flex-grow-1">
+      <section class="container bg-dark">
+        <h1 id="main-header">RSS агрегатор</h1>
+        <form action>
+          <div class="row">
+            <div class="col">
+              <div class="form-floating">
+                <input id="url-input" autofocus="" required="" name="url" aria-label="url" class="form-control w-100" placeholder="Ссылка RSS" autocomplete="off">
+                <label for="url-input">Ссылка RSS</label>
+              </div>
+            </div>            
+            <div class="col-auto">
+              <button type="submit">Добавить</button>
+            </div>
+          </div>
+        </form>
+        <p class="text-muted">Пример: https://lorem-rss.hexlet.app/feed</p>
+        <p class="feedback text-danger"></p>
+      </section>
+    </main>
+  </body>
+</html>
