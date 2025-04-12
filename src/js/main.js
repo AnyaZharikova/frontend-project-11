@@ -3,24 +3,13 @@ import * as yup from 'yup';
 import _ from 'lodash';
 import { proxy, subscribe, snapshot } from 'valtio/vanilla';
 import { handleForm, handleFeedback } from './view/watchers.js';
+import renderStaticText from './view/staticText.js';
+import renderContent from './view/renderContent.js';
+import updateFeeds from './updater.js';
 import getFeed from './getFeed.js';
 import parseFeed from './parser.js';
 import '../scss/styles.scss';
 // import * as bootstrap from 'bootstrap';
-
-const renderStaticText = (elements, i18next) => {
-  const {
-    header,
-    input,
-    label,
-    submitButton,
-  } = elements;
-
-  header.textContent = i18next.t('header');
-  input.placeholder = i18next.t('placeholder');
-  label.textContent = i18next.t('placeholder');
-  submitButton.textContent = i18next.t('submitButton');
-};
 
 const schema = yup.object({
   url: yup.string().url().required(),
@@ -69,66 +58,6 @@ const handleSubmit = (url, feeds) => validate(url)
     return { newFeed, newPosts };
   });
 
-const makeElementsWithClasses = (tag, classList = []) => {
-  const element = document.createElement(tag);
-  element.classList.add(...classList);
-  return element;
-};
-
-const makeFeed = (feed) => {
-  const liEl = makeElementsWithClasses('li', ['list-group-item']);
-  const hEl = makeElementsWithClasses('h3', ['h6', 'm-0']);
-  hEl.textContent = feed.title;
-
-  const pEl = makeElementsWithClasses('p', ['m-0', 'small', 'text-black-50']);
-  pEl.textContent = feed.description;
-
-  liEl.append(hEl, pEl);
-  return liEl;
-};
-
-const makePost = (post, i18next) => {
-  const liEl = makeElementsWithClasses('li', ['list-group-item']);
-
-  const aEl = document.createElement('a');
-  aEl.setAttribute('href', post.link);
-  aEl.setAttribute('data-id', post.id);
-  aEl.textContent = post.title;
-
-  const viewButton = makeElementsWithClasses('button', ['btn', 'btn-outline-primary', 'btn-sm']);
-  viewButton.setAttribute('type', 'button');
-  viewButton.setAttribute('data-id', post.id);
-  viewButton.textContent = i18next.t('viewButton');
-
-  liEl.append(aEl, viewButton);
-  return liEl;
-};
-
-const renderContent = (elements, state, i18next) => {
-  const { feeds, posts } = snapshot(state);
-  const { feeds: feedlsEl, posts: postsEl } = elements;
-
-  if (feeds.length === 0) return;
-
-  const hElFeeds = document.createElement('h2');
-  hElFeeds.classList.add('feeds-title');
-  hElFeeds.textContent = i18next.t('feedsTitle');
-  feedlsEl.append(hElFeeds);
-  const ulElFeeds = document.createElement('ul');
-  feeds.forEach((feed) => ulElFeeds.append(makeFeed(feed)));
-  feedlsEl.innerHTML = '';
-  feedlsEl.append(hElFeeds, ulElFeeds);
-
-  const hElPosts = document.createElement('h2');
-  hElPosts.classList.add('posts-title');
-  hElPosts.textContent = i18next.t('postsTitle');
-  postsEl.append(hElPosts);
-  const ulElPosts = document.createElement('ul');
-  posts.forEach((post) => ulElPosts.append(makePost(post, i18next)));
-  postsEl.innerHTML = '';
-  postsEl.append(hElPosts, ulElPosts);
-};
-
 const app = (i18nI, defaultLanguage) => {
   const initialState = proxy({
     form: {
@@ -147,6 +76,7 @@ const app = (i18nI, defaultLanguage) => {
   });
 
   const elements = {
+    title: document.querySelector('title'),
     header: document.getElementById('main-header'),
     form: document.querySelector('form'),
     input: document.getElementById('url-input'),
@@ -197,6 +127,7 @@ const app = (i18nI, defaultLanguage) => {
         initialState.form.status = 'success';
 
         renderContent(elements, initialState, i18nI);
+        updateFeeds(elements.posts, initialState, i18nI);
       })
       .catch((err) => {
         initialState.ui.feedbackMessage = i18nI.t(err.message);
