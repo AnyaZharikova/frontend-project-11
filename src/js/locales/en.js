@@ -15,6 +15,7 @@ export default {
       rssExists: 'RSS already exists',
       network: 'Network error. Please try again later',
       timeout: 'The server is not responding. Try again later',
+      updateFailed: 'Failed to update feeds. Please check your connection',
     },
     success: {
       rssAdded: 'RSS has been successfully added',
