@@ -14,13 +14,15 @@ export default {
     viewButton: 'Просмотр',
     errors: {
       invalidUrl: 'Ссылка должна быть валидным URL',
+      invalidRss: 'Ресурс не содержит валидный RSS',
       rssExists: 'RSS уже существует',
-      network: 'Ошибка сети. Попробуйте позже',
+      network: 'Ошибка сети',
       timeout: 'Сервер не отвечает. Попробуйте позже',
       updateFailed: 'Не удалось обновить ленту. Проверьте соединение',
+      empty: 'Не должно быть пустым',
     },
     success: {
-      rssAdded: 'RSS успешно добавлен',
+      rssAdded: 'RSS успешно загружен',
     },
     modal: {
       btnClose: 'Закрыть',
