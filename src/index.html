@@ -7,28 +7,51 @@
   </head>
   <body class="d-flex min-vh-100">
     <main class="flex-grow-1">
-      <section class="container bg-dark">
-        <h1 id="main-header">RSS агрегатор</h1>
-        <form action>
-          <div class="row">
-            <div class="col">
-              <div class="form-floating">
-                <input id="url-input" autofocus="" required="" name="url" aria-label="url" class="form-control w-100" placeholder="Ссылка RSS" autocomplete="off">
-                <label for="url-input">Ссылка RSS</label>
+      <section class="container-fluid bg-dark p-5">
+        <div class="d-flex justify-content-end pe-3">
+          <button type="button" class="btn btn-outline-light btn-sm" data-switch-lang="en">EN / RU</button>
+        </div>
+        <div class="row">
+          <div class="col-md-10 mx-auto">
+            <h1 id="main-header">RSS агрегатор</h1>
+            <p class="lead text-light" id="slogan"></p>
+            <form action>
+              <div class="d-flex gap-2 align-items-stretch">
+                <div class="flex-grow-1">
+                  <div class="form-floating">
+                    <input id="url-input" autofocus required name="url" aria-label="url" class="form-control h-100" placeholder="Ссылка RSS" autocomplete="off">
+                    <label for="url-input">Ссылка RSS</label>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary px-sm-5 h-100" aria-label="add">Добавить</button>
               </div>
-            </div>            
-            <div class="col-auto">
-              <button type="submit">Добавить</button>
-            </div>
+            </form>
+            <p class="text-secondary mt-2" id="example">Пример: https://lorem-rss.hexlet.app/feed</p>
+            <p class="feedback text-danger"></p>
           </div>
-        </form>
-        <p class="text-muted">Пример: https://lorem-rss.hexlet.app/feed</p>
-        <p class="feedback text-danger"></p>
+        </div>
       </section>
-      <section id="rss-content" class="container">
-        <div id="feeds"></div>
-        <div id="posts"></div>
+      <section id="rss-content" class="container mt-5">
+        <div class="row gx-5">
+          <div class="mx-auto col-lg-8 mb-4" id="posts-container" ></div>
+          <div class="mx-auto col-lg-4" id="feeds-container"></div>
+        </div>
       </section>
     </main>
+    <div class="modal fade" id="preview-modal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Modal title</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <a class="btn btn-primary modal-link" href="#" role="button" rel="noopener noreferrer">View more</a>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
