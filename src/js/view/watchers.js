@@ -22,9 +22,12 @@ const handleForm = (elements, status) => {
   }
 };
 
-const handleFeedback = (elements, feedbackMessage, feedbackType) => {
+const handleFeedback = (elements, feedbackMessage, feedbackType, i18next) => {
   const { feedback } = elements;
-  feedback.textContent = feedbackMessage;
+
+  if (!feedbackMessage || !feedback) return;
+
+  feedback.textContent = i18next.t(feedbackMessage);
   feedback.classList.remove('text-danger', 'text-success');
 
   switch (feedbackType) {
@@ -32,8 +35,6 @@ const handleFeedback = (elements, feedbackMessage, feedbackType) => {
       feedback.classList.add('text-success');
       break;
     case 'error':
-      feedback.classList.add('text-danger');
-      break;
     case 'idle':
       feedback.classList.add('text-danger');
       break;
