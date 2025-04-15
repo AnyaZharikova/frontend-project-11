@@ -1,4 +1,4 @@
-import makeElementsWithClasses from './utils.js';
+import makeElementsWithClasses from '../utils/utils.js';
 
 const makeFeed = (feed) => {
   const liEl = makeElementsWithClasses('li', ['list-group-item']);
@@ -13,9 +13,10 @@ const makeFeed = (feed) => {
 };
 
 const makePost = (post, i18next) => {
-  const liEl = makeElementsWithClasses('li', ['list-group-item']);
+  const liEl = makeElementsWithClasses('li', ['list-group-item', 'gap-2', 'post-item']);
 
   const aEl = document.createElement('a');
+  aEl.classList.add('fw-bold');
   aEl.setAttribute('href', post.link);
   aEl.setAttribute('data-id', post.id);
   aEl.textContent = post.title;
