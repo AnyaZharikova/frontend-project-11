@@ -5,8 +5,10 @@ export default {
       ru: 'Russian',
     },
     header: 'RSS Aggregator',
+    slogan: 'Make RSS reading part of your daily routine.',
     placeholder: 'RSS Link',
     submitButton: 'Add',
+    example: 'Example: https://lorem-rss.hexlet.app/feed',
     feedsTitle: 'Feeds',
     postsTitle: 'Posts',
     viewButton: 'View',
@@ -19,6 +21,10 @@ export default {
     },
     success: {
       rssAdded: 'RSS has been successfully added',
+    },
+    modal: {
+      btnClose: 'Close',
+      btnLink: 'View more',
     },
   },
 };

@@ -5,9 +5,11 @@ export default {
       ru: 'Русский',
     },
     header: 'RSS агрегатор',
+    slogan: 'Сделайте чтение RSS частью своего дня.',
     placeholder: 'Ссылка RSS',
     submitButton: 'Добавить',
-    feedTitle: 'Фиды',
+    example: 'Пример: https://lorem-rss.hexlet.app/feed',
+    feedsTitle: 'Фиды',
     postsTitle: 'Посты',
     viewButton: 'Просмотр',
     errors: {
@@ -19,6 +21,10 @@ export default {
     },
     success: {
       rssAdded: 'RSS успешно добавлен',
+    },
+    modal: {
+      btnClose: 'Закрыть',
+      btnLink: 'Читать полностью',
     },
   },
 };
