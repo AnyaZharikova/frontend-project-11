@@ -1,6 +1,6 @@
 /* eslint-disable import/extensions */
 import * as yup from 'yup';
-import _ from 'lodash';
+import uniqueId from 'lodash/uniqueId.js';
 import { proxy, subscribe, snapshot } from 'valtio/vanilla';
 import { handleForm, handleFeedback } from './view/watchers.js';
 import renderStaticText from './view/staticText.js';
@@ -8,6 +8,9 @@ import renderContent from './view/renderContent.js';
 import updateFeeds from './updater.js';
 import getFeed from './getFeed.js';
 import parseFeed from './parser.js';
+import showModal from './view/showModal.js';
+import markPostAsRead from './view/markPost.js';
+import applyLocale from './utils/changeLang.js';
 import '../scss/styles.scss';
 // import * as bootstrap from 'bootstrap';
 
@@ -20,7 +23,7 @@ const validate = async (value) => {
     await schema.validate({ url: value });
     return null;
   } catch (err) {
-    return err.message; // 'errors.invalidUrl'
+    return 'errors.invalidUrl';
   }
 };
 
@@ -42,17 +45,19 @@ const handleSubmit = (url, feeds) => validate(url)
     const { feed, posts } = parseFeed(doc);
 
     const newFeed = {
-      id: _.uniqueId(),
+      id: uniqueId(),
       title: feed.title,
       description: feed.description,
       url,
     };
 
     const newPosts = posts.map((post) => ({
-      id: _.uniqueId(),
+      id: uniqueId(),
       feedId: newFeed.id,
       title: post.title,
+      description: post.description,
       link: post.link,
+      read: false,
     }));
 
     return { newFeed, newPosts };
@@ -69,7 +74,7 @@ const app = (i18nI, defaultLanguage) => {
     posts: [],
     ui: {
       lng: defaultLanguage,
-      feedbackMessage: '',
+      feedbackMessage: null,
       feedbackType: 'idle',
       touched: false,
     },
@@ -78,13 +83,23 @@ const app = (i18nI, defaultLanguage) => {
   const elements = {
     title: document.querySelector('title'),
     header: document.getElementById('main-header'),
+    slogan: document.getElementById('slogan'),
     form: document.querySelector('form'),
     input: document.getElementById('url-input'),
     label: document.querySelector('label'),
     submitButton: document.querySelector('[type="submit"]'),
+    example: document.getElementById('example'),
     feedback: document.querySelector('.feedback'),
-    feeds: document.getElementById('feeds'),
-    posts: document.getElementById('posts'),
+    feeds: document.getElementById('feeds-container'),
+    posts: document.getElementById('posts-container'),
+    switchLang: document.querySelector('[data-switch-lang]'),
+    modal: {
+      container: document.getElementById('preview-modal'),
+      title: document.querySelector('.modal-title'),
+      body: document.querySelector('.modal-body'),
+      link: document.querySelector('.modal-link'),
+      buttonClose: document.querySelector('.btn-secondary'),
+    },
   };
 
   renderStaticText(elements, i18nI);
@@ -96,7 +111,7 @@ const app = (i18nI, defaultLanguage) => {
 
   subscribe(initialState.ui, () => {
     const { feedbackMessage, feedbackType } = snapshot(initialState.ui);
-    handleFeedback(elements, feedbackMessage, feedbackType);
+    handleFeedback(elements, feedbackMessage, feedbackType, i18nI);
   });
 
   elements.input.addEventListener('input', (e) => {
@@ -107,7 +122,7 @@ const app = (i18nI, defaultLanguage) => {
 
     validate(value)
       .then((error) => {
-        initialState.form.error = i18nI.t(error);
+        initialState.form.error = error;
       });
   });
 
@@ -122,7 +137,7 @@ const app = (i18nI, defaultLanguage) => {
         initialState.posts.push(...newPosts);
 
         initialState.form.inputValue = '';
-        initialState.ui.feedbackMessage = i18nI.t('success.rssAdded');
+        initialState.ui.feedbackMessage = 'success.rssAdded';
         initialState.ui.feedbackType = 'success';
         initialState.form.status = 'success';
 
@@ -130,13 +145,38 @@ const app = (i18nI, defaultLanguage) => {
         updateFeeds(elements.posts, initialState, i18nI);
       })
       .catch((err) => {
-        initialState.ui.feedbackMessage = i18nI.t(err.message);
+        initialState.ui.feedbackMessage = err.message;
         initialState.ui.feedbackType = 'error';
         initialState.form.status = 'error';
       });
   });
 
   renderContent(elements, initialState, i18nI);
+
+  elements.posts.addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON' && e.target.dataset.id) {
+      const postId = e.target.dataset.id;
+      const post = initialState.posts.find((p) => p.id === postId);
+      post.read = true;
+
+      markPostAsRead(postId, elements.posts);
+      showModal(post, elements.modal, i18nI);
+    }
+  });
+
+  elements.switchLang.addEventListener('click', (e) => {
+    const { switchLang } = elements;
+    const { feedbackMessage, feedbackType } = snapshot(initialState.ui);
+    const currentLang = e.target.dataset.switchLang;
+    const newLang = currentLang === 'ru' ? 'en' : 'ru';
+    i18nI.changeLanguage(newLang).then(() => {
+      initialState.ui.lng = newLang;
+      switchLang.dataset.switchLang = newLang;
+
+      applyLocale(elements, initialState, i18nI);
+      handleFeedback(elements, feedbackMessage, feedbackType, i18nI);
+    });
+  });
 };
 
 export default app;
