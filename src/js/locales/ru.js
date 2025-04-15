@@ -1,7 +1,7 @@
 export default {
   translation: {
     languages: {
-      en: 'English',
+      en: 'Английский',
       ru: 'Русский',
     },
     header: 'RSS агрегатор',
