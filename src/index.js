@@ -6,7 +6,7 @@ import applyLocale from './js/locales/locale.js';
 import './scss/styles.scss';
 
 const runApp = async () => {
-  const defaultLanguage = 'en';
+  const defaultLanguage = 'ru';
   const i18nextInstance = i18n.createInstance();
 
   await i18nextInstance.init({
