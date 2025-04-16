@@ -1,11 +1,12 @@
 import axios from 'axios';
 
 const getFeed = (url) => axios
-  .get(`https://allorigins.hexlet.app/raw?disableCache=true&url=${encodeURIComponent(url)}`, { timeout: 5000 })
+  .get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`, { timeout: 5000 })
   .then((response) => {
     console.log('[getFeed] Ответ получен, статус:', response.status);
+    const { contents } = response.data;
     const parser = new DOMParser();
-    const doc = parser.parseFromString(response.data, 'application/xml');
+    const doc = parser.parseFromString(contents, 'application/xml');
     const errorDoc = doc.querySelector('parsererror');
 
     if (errorDoc) {
