@@ -11,12 +11,15 @@ const getFeed = (url) => axios
 
     if (errorDoc) {
       console.error('[getFeed] Ошибка парсинга XML:', errorDoc.textContent);
-      throw new Error('errors.invalidRss');
+      throw new Error('errors.invalidUrl');
     }
 
     return doc;
   })
   .catch((error) => {
+    if (error.message === 'errors.invalidUrl') {
+      throw error;
+    }
     if (error.code === 'ECONNABORTED') {
       console.error('[getFeed] Таймаут запроса:', error.message);
       throw new Error('errors.timeout');
