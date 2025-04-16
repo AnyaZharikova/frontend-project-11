@@ -1,9 +1,5 @@
 export default {
   translation: {
-    languages: {
-      en: 'Английский',
-      ru: 'Русский',
-    },
     header: 'RSS агрегатор',
     slogan: 'Сделайте чтение RSS частью своего дня.',
     placeholder: 'Ссылка RSS',

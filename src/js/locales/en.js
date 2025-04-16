@@ -1,9 +1,5 @@
 export default {
   translation: {
-    languages: {
-      en: 'English',
-      ru: 'Russian',
-    },
     header: 'RSS Aggregator',
     slogan: 'Make RSS reading part of your daily routine.',
     placeholder: 'RSS Link',
