@@ -13,7 +13,7 @@ export default {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './src/index.html',// плагин указывает Webpack, где находится исходый HTML-файл, который нужно использовать как шаблон
+      template: './src/index.html', // плагин указывает Webpack, где находится исходый HTML-файл, который нужно использовать как шаблон
     }),
   ],
   devServer: {
@@ -21,8 +21,8 @@ export default {
     port: 8080,
     hot: true,
     client: {
-        overlay: false,
-    }
+      overlay: false,
+    },
   },
   module: {
     rules: [
