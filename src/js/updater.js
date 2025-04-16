@@ -6,8 +6,12 @@ import renderNewPost from './view/renderNewPost.js';
 const updateFeeds = (postsContainer, state, i18n) => {
   const { feeds, posts } = state;
   feeds.forEach((feed) => {
+    console.log(`[updateFeeds] Обновление фида: ${feed.url}`);
     getFeed(feed.url)
-      .then((doc) => parseFeed(doc))
+      .then((doc) => {
+        console.log(`[updateFeeds] Успешно загружен фид: ${feed.url}`);
+        return parseFeed(doc);
+      })
       .then(({ posts: freshPosts }) => {
         const existingLinks = state.posts.map((post) => post.link);
         const newPosts = freshPosts
@@ -24,7 +28,8 @@ const updateFeeds = (postsContainer, state, i18n) => {
         }
         console.log('New posts found:', newPosts);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error(`[updateFeeds] Ошибка при обновлении фида ${feed.url}:`, err.message);
         throw new Error('errors.updateFailed');
       });
   });
