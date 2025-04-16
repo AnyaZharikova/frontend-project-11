@@ -20,13 +20,14 @@ const schema = yup.object({
   url: yup.string().url().required(),
 });
 
-const validate = async (value) => {
-  try {
-    await schema.validate({ url: value });
-    return null;
-  } catch (err) {
-    return 'errors.invalidUrl';
+const validate = (value) => {
+  if (!value.includes('.')) {
+    return Promise.resolve('errors.invalidRss');
   }
+
+  return schema.validate({ url: value })
+    .then(() => null)
+    .catch(() => 'errors.invalidUrl');
 };
 
 const isDuplicateUrl = (newUrl, feeds) => feeds.some((feed) => feed.url === newUrl);
