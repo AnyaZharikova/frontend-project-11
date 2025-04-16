@@ -65,11 +65,11 @@ const handleSubmit = (url, feeds) => validate(url)
     return { newFeed, newPosts };
   });
 
-const app = (i18nI, defaultLanguage) => {
+const app = (i18nInstance, defaultLanguage) => {
   const initialState = initState(defaultLanguage);
   const elements = initElements();
 
-  renderStaticText(elements, i18nI);
+  renderStaticText(elements, i18nInstance);
 
   subscribe(initialState.form, () => {
     const { status, error } = snapshot(initialState.form);
@@ -78,7 +78,7 @@ const app = (i18nI, defaultLanguage) => {
 
   subscribe(initialState.ui, () => {
     const { feedbackMessage, feedbackType } = snapshot(initialState.ui);
-    handleFeedback(elements, feedbackMessage, feedbackType, i18nI);
+    handleFeedback(elements, feedbackMessage, feedbackType, i18nInstance);
   });
 
   elements.input.addEventListener('input', (e) => {
@@ -108,8 +108,8 @@ const app = (i18nI, defaultLanguage) => {
         initialState.ui.feedbackType = 'success';
         initialState.form.status = 'success';
 
-        renderContent(elements, initialState, i18nI);
-        updateFeeds(elements.posts, initialState, i18nI);
+        renderContent(elements, initialState, i18nInstance);
+        updateFeeds(elements.posts, initialState, i18nInstance);
       })
       .catch((err) => {
         initialState.ui.feedbackMessage = err.message;
@@ -118,7 +118,7 @@ const app = (i18nI, defaultLanguage) => {
       });
   });
 
-  renderContent(elements, initialState, i18nI);
+  renderContent(elements, initialState, i18nInstance);
 
   elements.posts.addEventListener('click', (e) => {
     if (e.target.tagName === 'BUTTON' && e.target.dataset.id) {
@@ -127,7 +127,7 @@ const app = (i18nI, defaultLanguage) => {
       post.read = true;
 
       markPostAsRead(postId, elements.posts);
-      showModal(post, elements.modal, i18nI);
+      showModal(post, elements.modal, i18nInstance);
     }
   });
 
@@ -136,12 +136,12 @@ const app = (i18nI, defaultLanguage) => {
     const { feedbackMessage, feedbackType } = snapshot(initialState.ui);
     const currentLang = e.target.dataset.switchLang;
     const newLang = currentLang === 'ru' ? 'en' : 'ru';
-    i18nI.changeLanguage(newLang).then(() => {
+    i18nInstance.changeLanguage(newLang).then(() => {
       initialState.ui.lng = newLang;
       switchLang.dataset.switchLang = newLang;
 
-      applyLocale(elements, initialState, i18nI);
-      handleFeedback(elements, feedbackMessage, feedbackType, i18nI);
+      applyLocale(elements, initialState, i18nInstance);
+      handleFeedback(elements, feedbackMessage, feedbackType, i18nInstance);
     });
   });
 };
