@@ -129,39 +129,37 @@ const app = (i18nInstance) => {
     initialState.feeds.newFeeds = [];
   });
 
-  subscribe(initialState.posts, () => {
-    const { newPosts } = snapshot(initialState.posts);
-
-    if (newPosts.length === 0) return;
-
-    render.renderNewPost(elements.posts, newPosts, i18nInstance);
-
-    initialState.posts.renderedPosts = [
-      ...newPosts,
-      ...initialState.posts.renderedPosts,
-    ];
-
-    initialState.posts.newPosts = [];
-  });
-
   elements.posts.addEventListener('click', (e) => {
     if (e.target.tagName === 'BUTTON' && e.target.dataset.id) {
       const postId = e.target.dataset.id;
-      const allPosts = [
-        ...initialState.posts.newPosts,
-        ...initialState.posts.renderedPosts,
-      ];
-      const post = allPosts.find((p) => p.id === postId);
 
-      if (post) {
-        post.read = true;
-        render.showModal(post, elements.modal, i18nInstance);
-      }
+      const postIndex = initialState.posts.renderedPosts.findIndex((p) => p.id === postId);
+      if (postIndex === -1) return;
+
+      const updatedPost = {
+        ...initialState.posts.renderedPosts[postIndex],
+        read: true,
+      };
+
+      initialState.posts.renderedPosts = [
+        ...initialState.posts.renderedPosts.slice(0, postIndex),
+        updatedPost,
+        ...initialState.posts.renderedPosts.slice(postIndex + 1),
+      ];
+
+      render.showModal(updatedPost, elements.modal, i18nInstance);
     }
   });
 
-  subscribe(initialState.posts.renderedPosts, () => {
-    const { renderedPosts } = snapshot(initialState.posts);
+  subscribe(initialState.posts, () => {
+    const { newPosts, renderedPosts } = snapshot(initialState.posts);
+
+    if (newPosts.length > 0) {
+      render.renderNewPost(elements.posts, newPosts, i18nInstance);
+      initialState.posts.renderedPosts = [...newPosts, ...renderedPosts];
+      initialState.posts.newPosts = [];
+    }
+
     renderedPosts
       .filter((post) => post.read)
       .forEach((post) => {
