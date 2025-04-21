@@ -1,22 +1,21 @@
 import 'bootstrap';
 import i18n from 'i18next';
-import app from './js/main.js';
-import resources from './js/locales/index.js';
-import applyLocale from './js/locales/locale.js';
+import app from './app/main.js';
+import resources from './app/locales/index.js';
+import applyLocale from './app/locales/locale.js';
 import './scss/styles.scss';
 
 const runApp = async () => {
-  const defaultLanguage = 'ru';
   const i18nextInstance = i18n.createInstance();
 
   await i18nextInstance.init({
-    lng: defaultLanguage,
+    lng: 'ru',
     debug: true,
     resources,
   });
 
   applyLocale();
-  app(i18nextInstance, defaultLanguage);
+  app(i18nextInstance);
 };
 
 runApp();
