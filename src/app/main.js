@@ -99,6 +99,8 @@ const app = (i18nInstance) => {
         initialState.posts.newPosts = [...newPosts, ...initialState.posts.newPosts];
 
         initialState.form.inputValue = '';
+        elements.input.value = '';
+
         initialState.ui.feedbackKey = 'success.rssAdded';
         initialState.ui.feedbackType = 'success';
         initialState.form.status = 'success';
