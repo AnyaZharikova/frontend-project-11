@@ -1,4 +1,29 @@
-const initElements = () => ({
+/* eslint-disable import/extensions */
+import { proxy } from 'valtio/vanilla';
+
+export const initialState = proxy({
+  form: {
+    status: 'filling',
+    error: null,
+    inputValue: '',
+  },
+  feeds: {
+    newFeeds: [],
+    renderedFeeds: [],
+  },
+  posts: {
+    newPosts: [],
+    renderedPosts: [],
+  },
+  ui: {
+    lng: 'ru',
+    feedbackKey: null,
+    feedbackType: 'idle',
+    touched: false,
+  },
+});
+
+export const elements = {
   title: document.querySelector('title'),
   header: document.getElementById('main-header'),
   slogan: document.getElementById('slogan'),
@@ -18,6 +43,4 @@ const initElements = () => ({
     link: document.querySelector('.modal-link'),
     buttonClose: document.querySelector('.btn-secondary'),
   },
-});
-
-export default initElements;
+};
