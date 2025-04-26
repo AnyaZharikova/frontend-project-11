@@ -1,29 +1,27 @@
 /* eslint-disable import/extensions */
 import { proxy } from 'valtio/vanilla';
 
-export const initialState = proxy({
+const initState = () => proxy({
   form: {
     status: 'filling',
     error: null,
     inputValue: '',
   },
-  feeds: {
-    newFeeds: [],
-    renderedFeeds: [],
-  },
-  posts: {
-    newPosts: [],
-    renderedPosts: [],
-  },
+  feeds: [],
+  posts: [],
   ui: {
     lng: 'ru',
     feedbackKey: null,
     feedbackType: 'idle',
     touched: false,
+    readPostsId: [],
+    modal: {
+      postId: null,
+    },
   },
 });
 
-export const elements = {
+const initElements = () => ({
   title: document.querySelector('title'),
   header: document.getElementById('main-header'),
   slogan: document.getElementById('slogan'),
@@ -43,4 +41,6 @@ export const elements = {
     link: document.querySelector('.modal-link'),
     buttonClose: document.querySelector('.btn-secondary'),
   },
-};
+});
+
+export { initState, initElements };
