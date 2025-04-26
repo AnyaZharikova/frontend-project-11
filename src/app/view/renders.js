@@ -24,8 +24,9 @@ const renderStaticText = (elements, i18next) => {
 };
 
 // Updates button availability and visual error indicators
-const handleForm = (elements, status) => {
+const handleForm = (elements, form) => {
   const { input, submitButton } = elements;
+  const { status } = form;
 
   switch (status) {
     case 'filling':
@@ -80,6 +81,7 @@ const makeElementsWithClasses = (tag, classList = []) => {
 // Generates a list (li) DOM element for one feed.
 const makeFeed = (feed) => {
   const liEl = makeElementsWithClasses('li', ['list-group-item']);
+  liEl.setAttribute('data-id', feed.id);
   const hEl = makeElementsWithClasses('h3', ['h6', 'm-0']);
   hEl.textContent = feed.title;
 
@@ -116,7 +118,7 @@ const renderFeeds = (elements, state, i18next) => {
   const snap = snapshot(state.feeds);
   const { feeds: feedsEl } = elements;
 
-  if (snap.renderedFeeds.length === 0) return;
+  if (snap.length === 0) return;
 
   const hElFeeds = document.createElement('h2');
   hElFeeds.classList.add('feeds-title');
@@ -125,17 +127,18 @@ const renderFeeds = (elements, state, i18next) => {
   feedsEl.append(hElFeeds);
 
   const ulElFeeds = document.createElement('ul');
-  snap.renderedFeeds.forEach((feed) => ulElFeeds.append(makeFeed(feed)));
+  snap.forEach((feed) => ulElFeeds.append(makeFeed(feed)));
   feedsEl.append(hElFeeds, ulElFeeds);
 };
 
 // Renders the entire list of posts.
 // Adds the title and each post to the posts container.
 const renderPosts = (elements, state, i18next) => {
-  const snap = snapshot(state.posts);
+  const snapPosts = snapshot(state.posts);
+  const { readPostsId, modal } = snapshot(state.ui);
   const { posts: postsEl } = elements;
 
-  if (snap.renderedPosts.length === 0) return;
+  if (snapPosts.length === 0) return;
 
   const hElPosts = document.createElement('h2');
   hElPosts.classList.add('posts-title');
@@ -144,7 +147,24 @@ const renderPosts = (elements, state, i18next) => {
   postsEl.append(hElPosts);
 
   const ulElPosts = document.createElement('ul');
-  snap.renderedPosts.forEach((post) => ulElPosts.append(makePost(post, i18next)));
+
+  snapPosts.forEach((post) => {
+    const postLi = makePost(post, i18next);
+    const postLink = postLi.querySelector('a');
+
+    if (readPostsId.includes(post.id)) {
+      postLink.classList.remove('fw-bold');
+      postLink.classList.add('fw-normal');
+    }
+
+    if (modal.postId === post.id) {
+      postLink.classList.remove('fw-bold');
+      postLink.classList.add('fw-normal');
+    }
+
+    ulElPosts.append(postLi);
+  });
+
   postsEl.append(hElPosts, ulElPosts);
 };
 
@@ -159,12 +179,12 @@ const renderNewFeed = (feedsContainer, newFeed) => {
 };
 
 // Adds new posts to the top of the list without redrawing the entire block.
-const renderNewPost = (postsContainer, newPosts, i18n) => {
+const renderNewPost = (postsContainer, posts, i18n) => {
   const ulEl = postsContainer.querySelector('ul');
 
   if (!ulEl) return;
 
-  newPosts.forEach((post) => {
+  posts.forEach((post) => {
     const newPostEl = makePost(post, i18n);
     ulEl.prepend(newPostEl);
   });
