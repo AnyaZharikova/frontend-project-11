@@ -2,7 +2,7 @@
 import * as yup from 'yup';
 import uniqueId from 'lodash/uniqueId.js';
 import { subscribe, snapshot } from 'valtio/vanilla';
-import { initialState, elements } from './state.js';
+import { initState, initElements } from './state.js';
 import * as render from './view/renders.js';
 import { getFeed, parseFeed, updateFeeds } from './feeds.js';
 import '../scss/styles.scss';
@@ -12,22 +12,21 @@ const schema = yup.object({
   url: yup.string().url().required(),
 });
 
-const validate = (value) => schema.validate({ url: value })
-  .then(() => null)
+const validate = (value, feeds) => schema.validate({ url: value })
   .catch(() => {
     throw new Error('errors.invalidUrl');
-  });
-
-const isDuplicateUrl = (newUrl, feeds) => feeds.some((feed) => feed.url === newUrl);
-
-const handleSubmit = (url, feeds) => validate(url)
-  .then(() => {
-    if (isDuplicateUrl(url, feeds)) {
-      throw new Error('errors.rssExists');
+  })
+  .then(({ url }) => {
+    const isDuplicate = feeds.some((feed) => feed.url === url);
+    if (!isDuplicate) {
+      return null;
     }
 
-    return getFeed(url);
-  })
+    throw new Error('errors.rssExists');
+  });
+
+const handleSubmit = (url, feeds) => validate(url, feeds)
+  .then(() => getFeed(url))
   .then((contents) => {
     const { feed, posts } = parseFeed(contents);
 
@@ -53,145 +52,196 @@ const handleSubmit = (url, feeds) => validate(url)
     throw new Error(err.message);
   });
 
-const app = (i18nInstance) => {
-  render.renderStaticText(elements, i18nInstance);
+const setupFormHandlers = (el, state) => {
+  const inputElement = el.input;
+  const {
+    form,
+    ui,
+    feeds,
+    posts,
+  } = state;
 
-  subscribe(initialState.form, (form) => {
-    const { status = 'filling' } = form;
-    render.handleForm(elements, status);
-  });
-
-  subscribe(initialState.ui, () => {
-    const { feedbackKey, feedbackType } = snapshot(initialState.ui);
-    render.handleFeedback(elements, feedbackKey, feedbackType, i18nInstance);
-  });
-
-  subscribe(initialState, () => {
-    render.renderContent(elements, initialState, i18nInstance);
-  });
-
-  updateFeeds(initialState);
-
-  elements.input.addEventListener('input', (e) => {
+  el.input.addEventListener('input', (e) => {
     const { value } = e.target;
-    initialState.form.inputValue = value;
-    initialState.form.status = 'filling';
-    initialState.ui.touched = true;
+
+    form.status = 'filling';
+    ui.touched = true;
 
     validate(value)
       .then(() => {
-        initialState.form.error = null;
+        form.error = null;
       })
       .catch((error) => {
-        initialState.form.error = error;
-        initialState.form.status = 'error';
+        form.error = error;
       });
   });
 
-  elements.form.addEventListener('submit', (e) => {
+  el.form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const url = elements.input.value.trim();
-    initialState.form.status = 'sending';
 
-    handleSubmit(url, initialState.feeds.renderedFeeds)
+    const url = inputElement.value.trim();
+    form.status = 'sending';
+
+    handleSubmit(url, state.feeds)
       .then(({ newFeed, newPosts }) => {
-        initialState.feeds.newFeeds = [newFeed, ...initialState.feeds.newFeeds];
-        initialState.posts.newPosts = [...newPosts, ...initialState.posts.newPosts];
+        feeds.unshift(newFeed);
+        posts.unshift(...newPosts);
 
-        initialState.form.inputValue = '';
-        elements.input.value = '';
+        ui.feedbackKey = 'success.rssAdded';
+        ui.feedbackType = 'success';
 
-        initialState.ui.feedbackKey = 'success.rssAdded';
-        initialState.ui.feedbackType = 'success';
-        initialState.form.status = 'success';
+        form.inputValue = '';
+        form.status = 'success';
       })
       .catch((err) => {
-        initialState.ui.feedbackKey = err.message; // Save the translation key
-        initialState.ui.feedbackType = 'error';
-        initialState.form.status = 'error';
+        ui.feedbackKey = err.message; // Save the translation key
+        ui.feedbackType = 'error';
+        form.status = 'error';
       });
   });
+};
 
-  subscribe(initialState.feeds, () => {
-    const { newFeeds } = snapshot(initialState.feeds);
+const setupPostHandlers = (el, state) => {
+  el.posts.addEventListener('click', (e) => {
+    const { ui } = state;
 
-    if (newFeeds.length === 0) return;
+    const isButton = e.target.tagName === 'BUTTON';
+    const { id: postId } = e.target.dataset;
 
-    newFeeds.forEach((feed) => {
-      render.renderNewFeed(elements.feeds, feed);
-    });
+    if (!isButton || !postId) return;
 
-    initialState.feeds.renderedFeeds = [
-      ...newFeeds,
-      ...initialState.feeds.renderedFeeds,
-    ];
-
-    initialState.feeds.newFeeds = [];
-  });
-
-  elements.posts.addEventListener('click', (e) => {
-    if (e.target.tagName === 'BUTTON' && e.target.dataset.id) {
-      const postId = e.target.dataset.id;
-
-      const postIndex = initialState.posts.renderedPosts.findIndex((p) => p.id === postId);
-      if (postIndex === -1) return;
-
-      const updatedPost = {
-        ...initialState.posts.renderedPosts[postIndex],
-        read: true,
-      };
-
-      initialState.posts.renderedPosts = [
-        ...initialState.posts.renderedPosts.slice(0, postIndex),
-        updatedPost,
-        ...initialState.posts.renderedPosts.slice(postIndex + 1),
-      ];
-
-      render.showModal(updatedPost, elements.modal, i18nInstance);
-    }
-  });
-
-  subscribe(initialState.posts, () => {
-    const { newPosts, renderedPosts } = snapshot(initialState.posts);
-
-    if (newPosts.length > 0) {
-      render.renderNewPost(elements.posts, newPosts, i18nInstance);
-      initialState.posts.renderedPosts = [...newPosts, ...renderedPosts];
-      initialState.posts.newPosts = [];
+    if (!ui.readPostsId.includes(postId)) {
+      ui.readPostsId.push(postId);
     }
 
-    renderedPosts
-      .filter((post) => post.read)
-      .forEach((post) => {
-        const postContainer = elements.posts;
-        const postLink = postContainer.querySelector(`a[data-id="${post.id}"]`);
-        if (postLink) {
-          postLink.classList.remove('fw-bold');
-          postLink.classList.add('fw-normal');
-        }
-      });
+    ui.modal.postId = postId;
+  });
+};
+
+const setupModalCloseHandler = (modalElements, state) => {
+  const { buttonClose, container } = modalElements;
+  const { ui } = state;
+
+  buttonClose.addEventListener('click', () => {
+    ui.modal.postId = null;
   });
 
-  elements.switchLang.addEventListener('click', (e) => {
-    const { switchLang } = elements;
+  container.addEventListener('click', (e) => {
+    if (e.target === container) {
+      ui.modal.postId = null;
+    }
+  });
+};
+
+const setupLanguageHandlers = (el, state) => {
+  const { ui } = state;
+  el.switchLang.addEventListener('click', (e) => {
+    const { switchLang } = el;
     const currentLang = e.target.dataset.switchLang;
     const newLang = currentLang === 'ru' ? 'en' : 'ru';
 
-    initialState.ui.lng = newLang;
+    ui.lng = newLang;
     switchLang.dataset.switchLang = newLang;
   });
+};
 
-  subscribe(initialState.ui, () => {
-    const { lng, feedbackKey, feedbackType } = snapshot(initialState.ui);
+const setupFormSubscribe = (el, state) => {
+  subscribe(state.form, () => {
+    const snapForm = snapshot(state.form);
+    render.handleForm(el, snapForm);
+  });
+};
 
-    if (lng !== i18nInstance.language) {
-      i18nInstance.changeLanguage(lng).then(() => {
-        render.renderStaticText(elements, i18nInstance);
-        render.renderContent(elements, initialState, i18nInstance);
-        render.handleFeedback(elements, feedbackKey, feedbackType, i18nInstance);
+const setupUiSubscribe = (el, state, i18nI) => {
+  subscribe(state.ui, () => {
+    const { feedbackKey, feedbackType } = snapshot(state.ui);
+    render.handleFeedback(el, feedbackKey, feedbackType, i18nI);
+  });
+
+  subscribe(state.ui, () => {
+    const { postId } = snapshot(state.ui.modal);
+    const { modal } = el;
+
+    if (!postId) return;
+
+    const post = snapshot(state.posts).find((p) => p.id === postId);
+
+    if (post) {
+      render.showModal(post, modal, i18nI);
+      modal.container.classList.add('open');
+      modal.container.classList.add('show');
+    } else {
+      modal.container.classList.remove('open');
+      modal.container.classList.remove('show');
+    }
+  });
+
+  subscribe(state.ui, () => {
+    const { lng, feedbackKey, feedbackType } = snapshot(state.ui);
+
+    if (lng !== i18nI.language) {
+      i18nI.changeLanguage(lng).then(() => {
+        render.renderStaticText(el, i18nI);
+        render.renderContent(el, state, i18nI);
+        render.handleFeedback(el, feedbackKey, feedbackType, i18nI);
       });
     }
   });
+};
+
+const setupContentSubscribe = (el, state, i18nI) => {
+  subscribe(state, () => {
+    render.renderContent(el, state, i18nI);
+  });
+
+  subscribe(state, () => {
+    const { feeds, posts } = snapshot(state);
+    feeds.forEach((feed) => {
+      const isRendered = document.querySelector(`[data-id="${feed.id}"]`);
+      if (!isRendered) {
+        render.renderNewFeed(el.feeds, feed);
+      }
+    });
+
+    posts.forEach((post) => {
+      const isRendered = document.querySelector(`[data-id="${post.id}"]`);
+      if (!isRendered) {
+        render.renderNewPost(el.posts, post, i18nI);
+      }
+    });
+  });
+
+  subscribe(state, () => {
+    const { ui } = snapshot(state);
+    const postContainer = el.posts;
+
+    ui.readPostsId.forEach((id) => {
+      const postLink = postContainer.querySelector(`a[data-id="${id}"]`);
+
+      if (postLink) {
+        postLink.classList.remove('fw-bold');
+        postLink.classList.add('fw-normal');
+      }
+    });
+  });
+};
+
+const app = (i18nInstance) => {
+  const initialState = initState();
+  const elements = initElements();
+
+  render.renderStaticText(elements, i18nInstance);
+
+  setupFormHandlers(elements, initialState);
+  setupPostHandlers(elements, initialState, i18nInstance);
+  setupModalCloseHandler(elements.modal, initialState);
+  setupLanguageHandlers(elements, initialState);
+
+  setupFormSubscribe(elements, initialState);
+  setupUiSubscribe(elements, initialState, i18nInstance);
+  setupContentSubscribe(elements, initialState, i18nInstance);
+
+  updateFeeds(initialState);
 };
 
 export default app;
