@@ -49,12 +49,11 @@ const parseFeed = (contents) => {
 // Periodically updates posts for all saved feeds
 // Receives new posts, compares with current ones, adds only new ones.
 const updateFeeds = (state) => {
-  const feeds = state.feeds.renderedFeeds;
-  const posts = state.posts.renderedPosts;
+  const { feeds, posts } = state;
 
   const feedsPromises = feeds.map((feed) => getFeed(feed.url)
-    .then((doc) => parseFeed(doc))
-    .then(({ posts: freshPosts }) => {
+    .then((doc) => {
+      const { posts: freshPosts } = parseFeed(doc);
       const existingLinks = posts.map((post) => post.link);
       const newPosts = freshPosts
         .filter((post) => !existingLinks.includes(post.link))
@@ -66,7 +65,7 @@ const updateFeeds = (state) => {
         }));
 
       if (newPosts.length > 0) {
-        state.posts.newPosts.unshift(...newPosts);
+        state.posts.unshift(...newPosts);
       }
     })
     .catch((err) => {
