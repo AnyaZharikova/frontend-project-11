@@ -162,14 +162,14 @@ const setupUiSubscribe = (el, state, i18nI) => {
     const { postId } = snapshot(state.ui.modal);
     const { modal } = el;
 
-    if (!postId) return;
+    if (postId) {
+      const post = snapshot(state.posts).find((p) => p.id === postId);
 
-    const post = snapshot(state.posts).find((p) => p.id === postId);
-
-    if (post) {
-      render.showModal(post, modal, i18nI);
-      modal.container.classList.add('open');
-      modal.container.classList.add('show');
+      if (post) {
+        render.showModal(post, modal, i18nI);
+        modal.container.classList.add('open');
+        modal.container.classList.add('show');
+      }
     } else {
       modal.container.classList.remove('open');
       modal.container.classList.remove('show');
