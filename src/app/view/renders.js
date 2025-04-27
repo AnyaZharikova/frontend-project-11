@@ -1,4 +1,3 @@
-/* eslint-disable import/extensions */
 import { snapshot } from 'valtio/vanilla'
 import { Modal } from 'bootstrap'
 
