@@ -118,18 +118,10 @@ const setupPostHandlers = (el, state) => {
   });
 };
 
-const setupModalCloseHandler = (modalElements, state) => {
-  const { buttonClose, container } = modalElements;
-  const { ui } = state;
-
-  buttonClose.addEventListener('click', () => {
-    ui.modal.postId = null;
-  });
-
-  container.addEventListener('click', (e) => {
-    if (e.target === container) {
-      ui.modal.postId = null;
-    }
+const initModalCloseHandler = (modalElements, state) => {
+  const { modal } = state.ui;
+  modalElements.container.addEventListener('hidden.bs.modal', () => {
+    modal.postId = null;
   });
 };
 
@@ -154,30 +146,14 @@ const setupFormSubscribe = (el, state) => {
 
 const setupUiSubscribe = (el, state, i18nI) => {
   subscribe(state.ui, () => {
-    const { feedbackKey, feedbackType } = snapshot(state.ui);
-    render.handleFeedback(el, feedbackKey, feedbackType, i18nI);
-  });
-
-  subscribe(state.ui, () => {
-    const { postId } = snapshot(state.ui.modal);
+    const snapUi = snapshot(state.ui);
+    const {
+      lng,
+      feedbackKey,
+      feedbackType,
+      modal: { postId },
+    } = snapUi;
     const { modal } = el;
-
-    if (postId) {
-      const post = snapshot(state.posts).find((p) => p.id === postId);
-
-      if (post) {
-        render.showModal(post, modal, i18nI);
-        modal.container.classList.add('open');
-        modal.container.classList.add('show');
-      }
-    } else {
-      modal.container.classList.remove('open');
-      modal.container.classList.remove('show');
-    }
-  });
-
-  subscribe(state.ui, () => {
-    const { lng, feedbackKey, feedbackType } = snapshot(state.ui);
 
     if (lng !== i18nI.language) {
       i18nI.changeLanguage(lng).then(() => {
@@ -185,17 +161,28 @@ const setupUiSubscribe = (el, state, i18nI) => {
         render.renderContent(el, state, i18nI);
         render.handleFeedback(el, feedbackKey, feedbackType, i18nI);
       });
+    } else {
+      render.handleFeedback(el, feedbackKey, feedbackType, i18nI);
+    }
+
+    if (postId) {
+      const post = snapshot(state.posts).find((p) => p.id === postId);
+
+      if (post) {
+        render.showModal(post, modal, i18nI);
+      }
     }
   });
 };
 
 const setupContentSubscribe = (el, state, i18nI) => {
   subscribe(state, () => {
-    render.renderContent(el, state, i18nI);
-  });
+    const snapState = snapshot(state);
+    const { feeds, posts, ui } = snapState;
+    const postContainer = el.posts;
 
-  subscribe(state, () => {
-    const { feeds, posts } = snapshot(state);
+    render.renderContent(el, state, i18nI);
+
     feeds.forEach((feed) => {
       const isRendered = document.querySelector(`[data-id="${feed.id}"]`);
       if (!isRendered) {
@@ -209,11 +196,6 @@ const setupContentSubscribe = (el, state, i18nI) => {
         render.renderNewPost(el.posts, post, i18nI);
       }
     });
-  });
-
-  subscribe(state, () => {
-    const { ui } = snapshot(state);
-    const postContainer = el.posts;
 
     ui.readPostsId.forEach((id) => {
       const postLink = postContainer.querySelector(`a[data-id="${id}"]`);
@@ -234,8 +216,8 @@ const app = (i18nInstance) => {
 
   setupFormHandlers(elements, initialState);
   setupPostHandlers(elements, initialState, i18nInstance);
-  setupModalCloseHandler(elements.modal, initialState);
   setupLanguageHandlers(elements, initialState);
+  initModalCloseHandler(elements.modal, initialState);
 
   setupFormSubscribe(elements, initialState);
   setupUiSubscribe(elements, initialState, i18nInstance);
