@@ -1,4 +1,3 @@
-/* eslint-disable import/extensions */
 import { proxy } from 'valtio/vanilla'
 
 const initState = () => proxy({
