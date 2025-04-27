@@ -1,4 +1,4 @@
-import { setLocale } from 'yup';
+import { setLocale } from 'yup'
 
 export default () => {
   setLocale({
@@ -8,5 +8,5 @@ export default () => {
     string: {
       url: 'errors.invalidUrl',
     },
-  });
-};
+  })
+}

@@ -1,5 +1,5 @@
 /* eslint-disable import/extensions */
-import { proxy } from 'valtio/vanilla';
+import { proxy } from 'valtio/vanilla'
 
 const initState = () => proxy({
   form: {
@@ -19,7 +19,7 @@ const initState = () => proxy({
       postId: null,
     },
   },
-});
+})
 
 const initElements = () => ({
   title: document.querySelector('title'),
@@ -41,6 +41,6 @@ const initElements = () => ({
     link: document.querySelector('.modal-link'),
     buttonClose: document.querySelector('.btn-secondary'),
   },
-});
+})
 
-export { initState, initElements };
+export { initState, initElements }
