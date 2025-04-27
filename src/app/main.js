@@ -5,7 +5,6 @@ import { initState, initElements } from './state.js'
 import * as render from './view/renders.js'
 import { getFeed, parseFeed, updateFeeds } from './feeds.js'
 import '../scss/styles.scss'
-// import * as bootstrap from 'bootstrap';
 
 const schema = yup.object({
   url: yup.string().url().required(),
@@ -42,7 +41,6 @@ const handleSubmit = (url, feeds) => validate(url, feeds)
       title: post.title,
       description: post.description,
       link: post.link,
-      read: false,
     }))
 
     return { newFeed, newPosts }
@@ -51,53 +49,50 @@ const handleSubmit = (url, feeds) => validate(url, feeds)
     throw new Error(err.message)
   })
 
+const handleInputChange = (e, form, ui) => {
+  const { value } = e.target
+  form.status = 'filling'
+  ui.touched = true
+
+  validate(value)
+    .then(() => { form.error = null })
+    .catch((error) => { form.error = error })
+}
+
+const handleSuccessSubmit = (newFeed, newPosts, form, ui, feeds, posts) => {
+  feeds.unshift(newFeed)
+  posts.unshift(...newPosts)
+
+  ui.feedbackKey = 'success.rssAdded'
+  ui.feedbackType = 'success'
+
+  form.inputValue = ''
+  form.status = 'success'
+}
+
+const handleErrorSubmit = (err, form, ui) => {
+  ui.feedbackKey = err.message // Save the translation key
+  ui.feedbackType = 'error'
+  form.status = 'error'
+}
+
+const handleFormSubmit = (e, inputElement, form, ui, feeds, posts) => {
+  e.preventDefault()
+
+  const url = inputElement.value.trim()
+  form.status = 'sending'
+
+  handleSubmit(url, feeds)
+    .then(({ newFeed, newPosts }) => handleSuccessSubmit(newFeed, newPosts, form, ui, feeds, posts))
+    .catch(err => handleErrorSubmit(err, form, ui))
+}
+
 const setupFormHandlers = (el, state) => {
   const inputElement = el.input
-  const {
-    form,
-    ui,
-    feeds,
-    posts,
-  } = state
+  const { form, ui, feeds, posts } = state
 
-  el.input.addEventListener('input', (e) => {
-    const { value } = e.target
-
-    form.status = 'filling'
-    ui.touched = true
-
-    validate(value)
-      .then(() => {
-        form.error = null
-      })
-      .catch((error) => {
-        form.error = error
-      })
-  })
-
-  el.form.addEventListener('submit', (e) => {
-    e.preventDefault()
-
-    const url = inputElement.value.trim()
-    form.status = 'sending'
-
-    handleSubmit(url, state.feeds)
-      .then(({ newFeed, newPosts }) => {
-        feeds.unshift(newFeed)
-        posts.unshift(...newPosts)
-
-        ui.feedbackKey = 'success.rssAdded'
-        ui.feedbackType = 'success'
-
-        form.inputValue = ''
-        form.status = 'success'
-      })
-      .catch((err) => {
-        ui.feedbackKey = err.message // Save the translation key
-        ui.feedbackType = 'error'
-        form.status = 'error'
-      })
-  })
+  el.input.addEventListener('input', e => handleInputChange(e, form, ui))
+  el.form.addEventListener('submit', e => handleFormSubmit(e, inputElement, form, ui, feeds, posts))
 }
 
 const setupPostHandlers = (el, state) => {
@@ -143,34 +138,35 @@ const setupFormSubscribe = (el, state) => {
   })
 }
 
+const handleLanguageChange = (lng, i18nI, el, state) => {
+  if (lng !== i18nI.language) {
+    i18nI.changeLanguage(lng).then(() => {
+      render.renderStaticText(el, i18nI)
+      render.renderContent(el, state, i18nI)
+    })
+  }
+}
+
+const renderPostModal = (postId, state, modal, i18nI) => {
+  const post = snapshot(state.posts).find(p => p.id === postId)
+
+  if (post) {
+    render.showModal(post, modal, i18nI)
+  }
+}
+
 const setupUiSubscribe = (el, state, i18nI) => {
   subscribe(state.ui, () => {
     const snapUi = snapshot(state.ui)
-    const {
-      lng,
-      feedbackKey,
-      feedbackType,
-      modal: { postId },
-    } = snapUi
+    const { lng, feedbackKey, feedbackType, modal: { postId } } = snapUi
     const { modal } = el
 
-    if (lng !== i18nI.language) {
-      i18nI.changeLanguage(lng).then(() => {
-        render.renderStaticText(el, i18nI)
-        render.renderContent(el, state, i18nI)
-        render.handleFeedback(el, feedbackKey, feedbackType, i18nI)
-      })
-    }
-    else {
-      render.handleFeedback(el, feedbackKey, feedbackType, i18nI)
-    }
+    handleLanguageChange(lng, i18nI, el, state)
+
+    render.handleFeedback(el, feedbackKey, feedbackType, i18nI)
 
     if (postId) {
-      const post = snapshot(state.posts).find(p => p.id === postId)
-
-      if (post) {
-        render.showModal(post, modal, i18nI)
-      }
+      renderPostModal(postId, state, modal, i18nI)
     }
   })
 }
